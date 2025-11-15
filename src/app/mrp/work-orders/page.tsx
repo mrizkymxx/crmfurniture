@@ -14,6 +14,8 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { format } from 'date-fns'
+import { Eye, Pencil, Trash2 } from 'lucide-react'
+import { toast } from 'sonner'
 
 interface WorkOrder {
   id: string
@@ -32,6 +34,7 @@ interface WorkOrder {
 export default function WorkOrdersPage() {
   const [workOrders, setWorkOrders] = useState<WorkOrder[]>([])
   const [loading, setLoading] = useState(true)
+  const [deleting, setDeleting] = useState<string | null>(null)
   const supabase = createClient()
 
   useEffect(() => {
@@ -77,6 +80,38 @@ export default function WorkOrdersPage() {
       completed: 'bg-green-50 text-green-700',
     }
     return colors[stage] || 'bg-gray-50 text-gray-700'
+  }
+
+  const handleDelete = async (woId: string, woNumber: string) => {
+    if (!confirm(`Are you sure you want to delete Work Order ${woNumber}?`)) {
+      return
+    }
+
+    setDeleting(woId)
+    try {
+      // Delete production logs first
+      const { error: logsError } = await supabase
+        .from('production_logs')
+        .delete()
+        .eq('work_order_id', woId)
+
+      if (logsError) throw logsError
+
+      // Delete work order
+      const { error: woError } = await supabase
+        .from('work_orders')
+        .delete()
+        .eq('id', woId)
+
+      if (woError) throw woError
+
+      toast.success('Work order deleted successfully')
+      fetchWorkOrders()
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to delete work order')
+    } finally {
+      setDeleting(null)
+    }
   }
 
   return (
@@ -167,11 +202,29 @@ export default function WorkOrdersPage() {
                         : '-'}
                     </TableCell>
                     <TableCell>
-                      <Link href={`/mrp/work-orders/${wo.id}`}>
-                        <Button variant="outline" size="sm">
-                          View
+                      <div className="flex items-center gap-2">
+                        <Link href={`/mrp/work-orders/${wo.id}/view`}>
+                          <Button variant="ghost" size="sm">
+                            <Eye className="h-4 w-4 mr-1" />
+                            View
+                          </Button>
+                        </Link>
+                        <Link href={`/mrp/work-orders/${wo.id}`}>
+                          <Button variant="outline" size="sm">
+                            <Pencil className="h-4 w-4 mr-1" />
+                            Edit
+                          </Button>
+                        </Link>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDelete(wo.id, wo.wo_number)}
+                          disabled={deleting === wo.id}
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                        >
+                          <Trash2 className="h-4 w-4" />
                         </Button>
-                      </Link>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}

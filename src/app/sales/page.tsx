@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -14,6 +15,9 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { format } from 'date-fns'
+import { Eye, Pencil, Trash2 } from 'lucide-react'
+import { toast } from 'sonner'
+import { StatusUpdateDialog } from '@/components/status-update-dialog'
 
 interface SalesOrder {
   id: string
@@ -27,8 +31,10 @@ interface SalesOrder {
 }
 
 export default function SalesPage() {
+  const router = useRouter()
   const [orders, setOrders] = useState<SalesOrder[]>([])
   const [loading, setLoading] = useState(true)
+  const [deleting, setDeleting] = useState<string | null>(null)
   const supabase = createClient()
 
   useEffect(() => {
@@ -61,6 +67,38 @@ export default function SalesPage() {
       cancelled: 'bg-red-100 text-red-800',
     }
     return colors[status] || 'bg-gray-100 text-gray-800'
+  }
+
+  const handleDelete = async (orderId: string, soNumber: string) => {
+    if (!confirm(`Are you sure you want to delete Sales Order ${soNumber}?`)) {
+      return
+    }
+
+    setDeleting(orderId)
+    try {
+      // Delete sales items first
+      const { error: itemsError } = await supabase
+        .from('sales_items')
+        .delete()
+        .eq('sales_order_id', orderId)
+
+      if (itemsError) throw itemsError
+
+      // Delete sales order
+      const { error: orderError } = await supabase
+        .from('sales_orders')
+        .delete()
+        .eq('id', orderId)
+
+      if (orderError) throw orderError
+
+      toast.success('Sales order deleted successfully')
+      fetchOrders()
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to delete sales order')
+    } finally {
+      setDeleting(null)
+    }
   }
 
   return (
@@ -124,11 +162,36 @@ export default function SalesPage() {
                     </TableCell>
                     <TableCell>${order.total_amount.toFixed(2)}</TableCell>
                     <TableCell>
-                      <Link href={`/sales/${order.id}`}>
-                        <Button variant="outline" size="sm">
-                          View
+                      <div className="flex items-center gap-2">
+                        <StatusUpdateDialog
+                          orderId={order.id}
+                          orderNumber={order.so_number}
+                          currentStatus={order.status}
+                          orderType="sales"
+                          onSuccess={fetchOrders}
+                        />
+                        <Link href={`/sales/${order.id}/view`}>
+                          <Button variant="ghost" size="sm">
+                            <Eye className="h-4 w-4 mr-1" />
+                            View
+                          </Button>
+                        </Link>
+                        <Link href={`/sales/${order.id}`}>
+                          <Button variant="outline" size="sm">
+                            <Pencil className="h-4 w-4 mr-1" />
+                            Edit
+                          </Button>
+                        </Link>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDelete(order.id, order.so_number)}
+                          disabled={deleting === order.id}
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                        >
+                          <Trash2 className="h-4 w-4" />
                         </Button>
-                      </Link>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}

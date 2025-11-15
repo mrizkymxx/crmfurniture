@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -14,6 +15,9 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { format } from 'date-fns'
+import { Eye, Pencil, Trash2 } from 'lucide-react'
+import { toast } from 'sonner'
+import { StatusUpdateDialog } from '@/components/status-update-dialog'
 
 interface PurchaseOrder {
   id: string
@@ -26,8 +30,10 @@ interface PurchaseOrder {
 }
 
 export default function PurchasePage() {
+  const router = useRouter()
   const [orders, setOrders] = useState<PurchaseOrder[]>([])
   const [loading, setLoading] = useState(true)
+  const [deleting, setDeleting] = useState<string | null>(null)
   const supabase = createClient()
 
   useEffect(() => {
@@ -60,6 +66,38 @@ export default function PurchasePage() {
       cancelled: 'bg-red-100 text-red-800',
     }
     return colors[status] || 'bg-gray-100 text-gray-800'
+  }
+
+  const handleDelete = async (orderId: string, poNumber: string) => {
+    if (!confirm(`Are you sure you want to delete Purchase Order ${poNumber}?`)) {
+      return
+    }
+
+    setDeleting(orderId)
+    try {
+      // Delete purchase items first
+      const { error: itemsError } = await supabase
+        .from('purchase_items')
+        .delete()
+        .eq('purchase_order_id', orderId)
+
+      if (itemsError) throw itemsError
+
+      // Delete purchase order
+      const { error: orderError } = await supabase
+        .from('purchase_orders')
+        .delete()
+        .eq('id', orderId)
+
+      if (orderError) throw orderError
+
+      toast.success('Purchase order deleted successfully')
+      fetchOrders()
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to delete purchase order')
+    } finally {
+      setDeleting(null)
+    }
   }
 
   return (
@@ -119,11 +157,36 @@ export default function PurchasePage() {
                     </TableCell>
                     <TableCell>${order.total_amount.toFixed(2)}</TableCell>
                     <TableCell>
-                      <Link href={`/purchase/${order.id}`}>
-                        <Button variant="outline" size="sm">
-                          View
+                      <div className="flex items-center gap-2">
+                        <StatusUpdateDialog
+                          orderId={order.id}
+                          orderNumber={order.po_number}
+                          currentStatus={order.status}
+                          orderType="purchase"
+                          onSuccess={fetchOrders}
+                        />
+                        <Link href={`/purchase/${order.id}/view`}>
+                          <Button variant="ghost" size="sm">
+                            <Eye className="h-4 w-4 mr-1" />
+                            View
+                          </Button>
+                        </Link>
+                        <Link href={`/purchase/${order.id}`}>
+                          <Button variant="outline" size="sm">
+                            <Pencil className="h-4 w-4 mr-1" />
+                            Edit
+                          </Button>
+                        </Link>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDelete(order.id, order.po_number)}
+                          disabled={deleting === order.id}
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                        >
+                          <Trash2 className="h-4 w-4" />
                         </Button>
-                      </Link>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}

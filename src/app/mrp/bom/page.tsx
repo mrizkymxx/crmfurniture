@@ -13,6 +13,8 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { Trash2 } from 'lucide-react'
+import { toast } from 'sonner'
 
 interface BOM {
   id: string
@@ -33,6 +35,7 @@ interface BOM {
 export default function BOMPage() {
   const [boms, setBoms] = useState<BOM[]>([])
   const [loading, setLoading] = useState(true)
+  const [deleting, setDeleting] = useState<string | null>(null)
   const supabase = createClient()
 
   useEffect(() => {
@@ -59,16 +62,20 @@ export default function BOMPage() {
     }
   }
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this BOM entry?')) return
+  const handleDelete = async (id: string, finishedGoodName: string) => {
+    if (!confirm(`Are you sure you want to delete BOM entry for ${finishedGoodName}?`)) return
 
+    setDeleting(id)
     try {
       const { error } = await supabase.from('bom').delete().eq('id', id)
       if (error) throw error
+      toast.success('BOM entry deleted successfully')
       fetchBOMs()
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error deleting BOM:', error)
-      alert('Failed to delete BOM entry')
+      toast.error(error.message || 'Failed to delete BOM entry')
+    } finally {
+      setDeleting(null)
     }
   }
 
@@ -115,20 +122,15 @@ export default function BOMPage() {
                       {bom.quantity_required} {bom.unit || 'units'}
                     </TableCell>
                     <TableCell>
-                      <div className="flex space-x-2">
-                        <Link href={`/mrp/bom/${bom.id}`}>
-                          <Button variant="outline" size="sm">
-                            Edit
-                          </Button>
-                        </Link>
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          onClick={() => handleDelete(bom.id)}
-                        >
-                          Delete
-                        </Button>
-                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDelete(bom.id, bom.finished_good?.name)}
+                        disabled={deleting === bom.id}
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
                     </TableCell>
                   </TableRow>
                 ))}

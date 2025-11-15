@@ -11,6 +11,7 @@ const navigation = [
   { name: 'Purchase Orders', href: '/purchase', icon: '🛒' },
   { name: 'Sales Orders', href: '/sales', icon: '💰' },
   { name: 'MRP', href: '/mrp', icon: '⚙️' },
+  { name: 'Reports', href: '/reports', icon: '📈' },
 ]
 
 export function Sidebar() {
@@ -20,9 +21,9 @@ export function Sidebar() {
   if (!sidebarOpen) return null
 
   return (
-    <aside className="fixed left-0 top-16 z-40 h-[calc(100vh-4rem)] w-64 border-r bg-white">
+    <aside className="fixed left-0 top-16 z-40 h-[calc(100vh-4rem)] w-64 border-r shadow-xl" style={{background: 'linear-gradient(to bottom, rgb(249 250 251), rgb(255 255 255))'}}>
       <nav className="flex h-full flex-col overflow-y-auto p-4">
-        <ul className="space-y-2">
+        <ul className="space-y-1">
           {navigation.map((item) => {
             const isActive = pathname.startsWith(item.href)
             return (
@@ -30,13 +31,17 @@ export function Sidebar() {
                 <Link
                   href={item.href}
                   className={cn(
-                    'flex items-center space-x-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+                    'group flex items-center space-x-3 rounded-xl px-4 py-3 text-sm font-medium transition-all duration-200',
                     isActive
-                      ? 'bg-gray-100 text-gray-900'
-                      : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
+                      ? 'text-white shadow-lg shadow-blue-500/30'
+                      : 'text-gray-700 hover:bg-gray-100 hover:translate-x-1'
                   )}
+                  style={isActive ? {background: 'linear-gradient(to right, rgb(37 99 235), rgb(79 70 229))'} : undefined}
                 >
-                  <span className="text-xl">{item.icon}</span>
+                  <span className={cn(
+                    'text-xl transition-transform group-hover:scale-110',
+                    isActive ? '' : ''
+                  )}>{item.icon}</span>
                   <span>{item.name}</span>
                 </Link>
               </li>
