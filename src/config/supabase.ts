@@ -7,7 +7,10 @@ if (!supabaseUrl || !supabaseAnonKey) {
   console.warn('Warning: Supabase credentials not configured. Please set SUPABASE_URL and SUPABASE_ANON_KEY in .env file');
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+// Create a mock client if credentials are not provided, to allow the app to run in demo mode
+export const supabase = (supabaseUrl && supabaseAnonKey) 
+  ? createClient(supabaseUrl, supabaseAnonKey)
+  : createClient('https://placeholder.supabase.co', 'placeholder-key');
 
 export const config = {
   supabaseUrl,
