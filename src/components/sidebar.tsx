@@ -21,7 +21,7 @@ export function Sidebar() {
   if (!sidebarOpen) return null
 
   return (
-    <aside className="fixed left-0 top-16 z-40 h-[calc(100vh-4rem)] w-64 border-r shadow-xl" style={{background: 'linear-gradient(to bottom, rgb(249 250 251), rgb(255 255 255))'}}>
+    <aside className="fixed left-0 top-16 z-40 h-[calc(100vh-4rem)] w-64 border-r shadow-xl transition-transform duration-300" style={{background: 'linear-gradient(to bottom, rgb(249 250 251), rgb(255 255 255))'}}>
       <nav className="flex h-full flex-col overflow-y-auto p-4">
         <ul className="space-y-1">
           {navigation.map((item) => {

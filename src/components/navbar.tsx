@@ -29,7 +29,7 @@ export function Navbar() {
   }
 
   return (
-    <nav className="sticky top-0 z-50 w-full border-b bg-white/80 backdrop-blur-md shadow-sm border-gray-200/50">
+    <nav className="fixed top-0 z-50 w-full border-b bg-white/95 backdrop-blur-md shadow-sm border-gray-200/50 transition-all duration-300">
       <div className="flex h-16 items-center px-4">
         <Button
           variant="ghost"
