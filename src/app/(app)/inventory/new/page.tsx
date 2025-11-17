@@ -19,13 +19,13 @@ const itemSchema = z.object({
   name: z.string().min(1, 'Name is required'),
   description: z.string().optional(),
   category: z.string().optional(),
-  unit: z.string().default('pcs'),
+  unit: z.string().min(1, 'Unit is required'),
   unit_price: z.number().min(0, 'Price must be positive'),
   current_stock: z.number().int().min(0, 'Stock must be non-negative'),
   min_stock: z.number().int().min(0, 'Min stock must be non-negative'),
   max_stock: z.number().int().min(0, 'Max stock must be non-negative').optional(),
-  is_raw_material: z.boolean().default(false),
-  is_finished_good: z.boolean().default(false),
+  is_raw_material: z.boolean(),
+  is_finished_good: z.boolean(),
 })
 
 type ItemFormData = z.infer<typeof itemSchema>
