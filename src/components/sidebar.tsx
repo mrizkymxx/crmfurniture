@@ -4,14 +4,15 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useAppStore } from '@/store/appStore'
 import { cn } from '@/lib/utils'
+import { LayoutDashboard, Package, ShoppingCart, DollarSign, Settings, TrendingUp } from 'lucide-react'
 
 const navigation = [
-  { name: 'Dashboard', href: '/dashboard', icon: '📊' },
-  { name: 'Inventory', href: '/inventory', icon: '📦' },
-  { name: 'Purchase Orders', href: '/purchase', icon: '🛒' },
-  { name: 'Sales Orders', href: '/sales', icon: '💰' },
-  { name: 'MRP', href: '/mrp', icon: '⚙️' },
-  { name: 'Reports', href: '/reports', icon: '📈' },
+  { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+  { name: 'Inventory', href: '/inventory', icon: Package },
+  { name: 'Purchase Orders', href: '/purchase', icon: ShoppingCart },
+  { name: 'Sales Orders', href: '/sales', icon: DollarSign },
+  { name: 'MRP', href: '/mrp', icon: Settings },
+  { name: 'Reports', href: '/reports', icon: TrendingUp },
 ]
 
 export function Sidebar() {
@@ -21,11 +22,12 @@ export function Sidebar() {
   if (!sidebarOpen) return null
 
   return (
-    <aside className="fixed left-0 top-16 z-40 h-[calc(100vh-4rem)] w-64 border-r shadow-xl transition-transform duration-300" style={{background: 'linear-gradient(to bottom, rgb(249 250 251), rgb(255 255 255))'}}>
+    <aside className="fixed left-0 top-16 z-40 h-[calc(100vh-4rem)] w-64 border-r bg-card shadow-xl transition-all duration-300">
       <nav className="flex h-full flex-col overflow-y-auto p-4">
         <ul className="space-y-1">
           {navigation.map((item) => {
             const isActive = pathname.startsWith(item.href)
+            const Icon = item.icon
             return (
               <li key={item.name}>
                 <Link
@@ -33,15 +35,14 @@ export function Sidebar() {
                   className={cn(
                     'group flex items-center space-x-3 rounded-xl px-4 py-3 text-sm font-medium transition-all duration-200',
                     isActive
-                      ? 'text-white shadow-lg shadow-blue-500/30'
-                      : 'text-gray-700 hover:bg-gray-100 hover:translate-x-1'
+                      ? 'bg-linear-to-r from-primary to-secondary text-white shadow-lg shadow-primary/30'
+                      : 'text-foreground hover:bg-muted hover:translate-x-1'
                   )}
-                  style={isActive ? {background: 'linear-gradient(to right, rgb(37 99 235), rgb(79 70 229))'} : undefined}
                 >
-                  <span className={cn(
-                    'text-xl transition-transform group-hover:scale-110',
+                  <Icon className={cn(
+                    'h-5 w-5 transition-transform group-hover:scale-110',
                     isActive ? '' : ''
-                  )}>{item.icon}</span>
+                  )} />
                   <span>{item.name}</span>
                 </Link>
               </li>

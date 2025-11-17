@@ -53,7 +53,7 @@ export default function AppLayout({
   }, [supabase, setUser, setProfile, router])
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       <Navbar />
       <div className="flex pt-16">
         <Sidebar />
